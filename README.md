@@ -1,53 +1,52 @@
+```text
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@  ____ _   _ ____  ____   ___  ____  @
+@ / ___| | | |  _ \/ ___| / _ \|  _ \ @
+@| |   | | | | |_) \___ \| | | | |_) |@
+@| |___| |_| |  _ < ___) | |_| |  _ < @
+@ \____|\___/|_| \_\____/ \___/|_| \_\@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+```
+
 
 ## Too many free trial accounts used on this machine. Please upgrade to pro. We have this limit in place to prevent abuse.
 Woops...
 
 
-**Cursor ID-Changer** is a lightweight script that resets all machine-specific identifiers used by [Cursor](https://cursor.sh), making your system look like a completely new device.
+Cursor ID-Changer is a privacy-focused tool for Linux that resets identifiers and cleans up residual data from the AI code editor Cursor, making your machine appear as a fresh install.
 
-## ✨ Features
+## 🔧 Features
 
-- Generates fresh UUIDs for:
-  - `deviceId`
-  - `machineId`
-  - `telemetryId`
-  - `installId`
-  - `userId`
-  - `macMachineId`
-  - `devDeviceId`
-  - `sqmId`
-- Deletes local update/tracking folders
-- Backs up original config before making changes
-- Restarts Cursor if running
+    🔁 Resets the machine-id using systemd-machine-id-setup
 
-## 📦 Requirements
+    🆔 Generates new unique installId and userId values
 
-- Linux (tested on Arch & Debian-based systems)
-- `bash`, `jq`
-- Cursor installed and launched at least once
-- Cursor MUST be installed via the official .appimage
-- Tested and working on newest 1.1.1 release
+    🧹 Searches and cleans up Cursor-related cookies and cache from browsers and system folders
 
-## 🚀 Usage
+    🧠 Includes a smart interactive menu with multiple options
+
+
+ ## 🧪 Requirements
+
+    Linux system with bash, jq, and basic coreutils
+
+    systemd-machine-id-setup available (usually default on systemd-based distros)
+
+## 🚀 Quick Start
 
 ```bash
 chmod +x app.sh
 ./app.sh
 ```
 
-## 🛡️ What it does
+## 📄 License
 
-- reates a backup of your ~/.config/Cursor/User/globalStorage/storage.json
+MIT License – Free to use, modify, and distribute.
 
-- Replaces relevant telemetry and machine identifiers with new ones
-
-- Removes updater cache: ~/.local/share/cursor-updater
-
- - Optionally restarts Cursor
-
-⚠️ Disclaimer
+## ⚠️ Disclaimer
 
 This script is for educational and research purposes only.
 You are solely responsible for how you use it.
 
 Made with ❤️ by tinkerers, for tinkerers.
+A tool for developers who value privacy, control, and clean slates.
