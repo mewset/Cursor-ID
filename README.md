@@ -33,11 +33,17 @@ Cursor ID-Changer is a privacy-focused tool for Linux that resets identifiers an
     systemd-machine-id-setup available (usually default on systemd-based distros)
 
 ## 🚀 Quick Start
+Log out from your account both in the program (File -> Preferences -> Cursor Settings -> Log out)
+Log out from cursor.com (Useravatar -> Log Out)
+
+
 
 ```bash
 chmod +x app.sh
 ./app.sh
 ```
+
+
 
 ## 📄 License
 
