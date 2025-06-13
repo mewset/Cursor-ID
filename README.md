@@ -21,6 +21,8 @@
 - Linux (tested on Arch & Debian-based systems)
 - `bash`, `jq`
 - Cursor installed and launched at least once
+- Cursor MUST be installed via the official .appimage
+- Tested and working on newest 1.1.1 release
 
 ## 🚀 Usage
 
