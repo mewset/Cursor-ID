@@ -1,4 +1,8 @@
 
+## Too many free trial accounts used on this machine. Please upgrade to pro. We have this limit in place to prevent abuse.
+Woops...
+
+
 **Cursor ID-Changer** is a lightweight script that resets all machine-specific identifiers used by [Cursor](https://cursor.sh), making your system look like a completely new device.
 
 ## ✨ Features
