@@ -104,40 +104,46 @@ restart_cursor() {
 }
 
 destroy_cursor_cookies() {
-  echo "[INFO] Cleaning Cursor cache and cookie files safely..."
+  echo "[INFO] Cleaning Cursor-specific cache and cookies ONLY..."
 
-  # Typiska Cursor-cache och config-mappar där temporära filer kan ligga
-  CURSOR_CACHE_DIRS=(
+  # Cursor-specifika mappar (verifierade/kända)
+  CURSOR_DIRS=(
+    "$HOME/.config/Cursor"
     "$HOME/.cache/Cursor"
     "$HOME/.local/share/Cursor"
-    "$HOME/.config/Cursor"
   )
 
-  # Ta bort filer som sannolikt är cache eller temporära filer i dessa mappar
-  for dir in "${CURSOR_CACHE_DIRS[@]}"; do
+  for dir in "${CURSOR_DIRS[@]}"; do
     if [[ -d "$dir" ]]; then
-      echo "[INFO] Cleaning Cursor cache in $dir"
-      find "$dir" -type f \( -iname '*cache*' -o -iname '*cookie*' -o -iname '*cursor*' \) -exec rm -f {} +
+      echo "[INFO] Removing files in: $dir"
+      rm -rf "$dir"
+      echo " - Deleted: $dir"
     fi
   done
 
-  # Vanliga webbläsarprofiler att söka igenom efter Cursor-relaterade cookies
-  BROWSER_COOKIE_PATHS=(
+  # Begränsad sökning i webbläsare – endast efter cookies och local storage där Cursor kan ha dykt upp
+  BROWSER_COOKIE_DIRS=(
     "$HOME/.mozilla/firefox"
     "$HOME/.config/google-chrome/Default"
     "$HOME/.config/chromium/Default"
   )
 
-  # Leta efter filer som innehåller cursor i namnet (t.ex. Cursor-specifika cookies eller lokal lagring)
-  for path in "${BROWSER_COOKIE_PATHS[@]}"; do
-    if [[ -d "$path" ]]; then
-      echo "[INFO] Searching for Cursor-related cookie files in $path"
-      find "$path" -type f \( -iname '*cursor*' -o -iname '*cookie*' \) -exec rm -f {} +
+  for bdir in "${BROWSER_COOKIE_DIRS[@]}"; do
+    if [[ -d "$bdir" ]]; then
+      echo "[INFO] Searching for Cursor browser cookies in: $bdir"
+      find "$bdir" -type f \( -iname '*Cookies*' -o -iname '*Local Storage*' \) -print0 | while IFS= read -r -d '' file; do
+        # Kontrollera om filen innehåller cursor-relaterade data
+        if strings "$file" | grep -iq 'cursor'; then
+          echo " - Removing browser file: $file"
+          rm -f "$file"
+        fi
+      done
     fi
   done
 
-  echo "[OK] Cursor cache and cookie cleanup done."
+  echo "[OK] Done. Only Cursor-related data was touched."
 }
+
 
 
 # === MENU ===
