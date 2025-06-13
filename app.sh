@@ -104,13 +104,41 @@ restart_cursor() {
 }
 
 destroy_cursor_cookies() {
-  echo "[INFO] Searching for Cursor-related cookies..."
-  grep -irl 'cursor' ~/.config/* 2>/dev/null | while read -r match; do
-    echo " - Removing: $match"
-    rm -f "$match"
+  echo "[INFO] Cleaning Cursor cache and cookie files safely..."
+
+  # Typiska Cursor-cache och config-mappar där temporära filer kan ligga
+  CURSOR_CACHE_DIRS=(
+    "$HOME/.cache/Cursor"
+    "$HOME/.local/share/Cursor"
+    "$HOME/.config/Cursor"
+  )
+
+  # Ta bort filer som sannolikt är cache eller temporära filer i dessa mappar
+  for dir in "${CURSOR_CACHE_DIRS[@]}"; do
+    if [[ -d "$dir" ]]; then
+      echo "[INFO] Cleaning Cursor cache in $dir"
+      find "$dir" -type f \( -iname '*cache*' -o -iname '*cookie*' -o -iname '*cursor*' \) -exec rm -f {} +
+    fi
   done
-  echo "[OK] Cursor-related cookies removed (if any)."
+
+  # Vanliga webbläsarprofiler att söka igenom efter Cursor-relaterade cookies
+  BROWSER_COOKIE_PATHS=(
+    "$HOME/.mozilla/firefox"
+    "$HOME/.config/google-chrome/Default"
+    "$HOME/.config/chromium/Default"
+  )
+
+  # Leta efter filer som innehåller cursor i namnet (t.ex. Cursor-specifika cookies eller lokal lagring)
+  for path in "${BROWSER_COOKIE_PATHS[@]}"; do
+    if [[ -d "$path" ]]; then
+      echo "[INFO] Searching for Cursor-related cookie files in $path"
+      find "$path" -type f \( -iname '*cursor*' -o -iname '*cookie*' \) -exec rm -f {} +
+    fi
+  done
+
+  echo "[OK] Cursor cache and cookie cleanup done."
 }
+
 
 # === MENU ===
 show_menu() {
