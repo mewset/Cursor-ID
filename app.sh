@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-set -e
+set -euo pipefail
 
-# ============================================
 # ASCII LOGO
-echo "
+cat <<'EOF'
+
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @  ____ _   _ ____  ____   ___  ____  @
 @ / ___| | | |  _ \/ ___| / _ \|  _ \ @
@@ -12,68 +12,62 @@ echo "
 @| |___| |_| |  _ < ___) | |_| |  _ < @
 @ \____|\___/|_| \_\____/ \___/|_| \_\@
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-"
 
-echo "Cursor ID-Changer – Reset Your Trace"
-echo
+Cursor ID-Changer – Reset Your Trace
 
-# === Config ===
+EOF
+
+# === CONFIGURATION ===
 CONFIG_DIR="$HOME/.config/Cursor"
 STORAGE_FILE="$CONFIG_DIR/User/globalStorage/storage.json"
 BACKUP_FILE="${STORAGE_FILE}.bak"
-UPDATER_DIR="$HOME/.local/share/cursor-updater"
 
-# === UUID Generator ===
-uuid() {
-  if command -v uuidgen &>/dev/null; then
-    uuidgen | tr '[:upper:]' '[:lower:]'
-  else
-    cat /proc/sys/kernel/random/uuid
-  fi
-}
+EXTRA_DIRS=(
+  "$HOME/.local/share/cursor-updater"
+  "$HOME/.cache/Cursor"
+  "$HOME/.local/share/Cursor"
+  "$HOME/.cache/appimage/Cursor"
+)
 
-# === Backup ===
-backup() {
-  if [ -f "$STORAGE_FILE" ]; then
-    cp "$STORAGE_FILE" "$BACKUP_FILE"
-    echo "[OK] Backup created: $BACKUP_FILE"
-  else
-    echo "[ERROR] Could not find: $STORAGE_FILE"
+# === DEPENDENCY CHECK ===
+require_jq() {
+  if ! command -v jq &>/dev/null; then
+    echo "[ERROR] 'jq' is required. Install it and try again." >&2
     exit 1
   fi
 }
 
-# === Remove updater folder ===
-remove_updater() {
-  if [ -d "$UPDATER_DIR" ]; then
-    rm -rf "$UPDATER_DIR"
-    echo "[OK] Removed updater directory: $UPDATER_DIR"
-  fi
+generate_uuid() {
+  command -v uuidgen &>/dev/null && uuidgen || cat /proc/sys/kernel/random/uuid
 }
 
-# === Generate new IDs and write to storage.json ===
-reset_ids() {
+backup_storage() {
+  [[ -f "$STORAGE_FILE" ]] || {
+    echo "[ERROR] storage.json not found at: $STORAGE_FILE" >&2
+    return 1
+  }
+  cp "$STORAGE_FILE" "$BACKUP_FILE"
+  echo "[OK] Backup created at: $BACKUP_FILE"
+}
+
+rewrite_storage() {
+  declare -A ids
+  for key in deviceId machineId telemetryId installId userId macMachineId devDeviceId sqmId; do
+    ids[$key]=$(generate_uuid | tr '[:upper:]' '[:lower:]')
+  done
+
+  local tmpfile
   tmpfile=$(mktemp)
 
-  # Generate fresh UUIDs
-  device_id=$(uuid)
-  machine_id=$(uuid)
-  telemetry_id=$(uuid)
-  install_id=$(uuid)
-  user_id=$(uuid)
-  mac_machine_id=$(uuid)
-  dev_device_id=$(uuid)
-  sqm_id=$(uuid)
-
   jq \
-    --arg deviceId "$device_id" \
-    --arg machineId "$machine_id" \
-    --arg telemetryId "$telemetry_id" \
-    --arg installId "$install_id" \
-    --arg userId "$user_id" \
-    --arg macMachineId "$mac_machine_id" \
-    --arg devDeviceId "$dev_device_id" \
-    --arg sqmId "$sqm_id" \
+    --arg deviceId       "${ids[deviceId]}" \
+    --arg machineId      "${ids[machineId]}" \
+    --arg telemetryId    "${ids[telemetryId]}" \
+    --arg installId      "${ids[installId]}" \
+    --arg userId         "${ids[userId]}" \
+    --arg macMachineId   "${ids[macMachineId]}" \
+    --arg devDeviceId    "${ids[devDeviceId]}" \
+    --arg sqmId          "${ids[sqmId]}" \
     '.deviceId = $deviceId
      | .machineId = $machineId
      | .telemetryId = $telemetryId
@@ -84,36 +78,76 @@ reset_ids() {
      | .sqmId = $sqmId' \
     "$STORAGE_FILE" > "$tmpfile" && mv "$tmpfile" "$STORAGE_FILE"
 
-  echo
-  echo "[OK] All identifiers have been reset:"
-  echo " - deviceId:      $device_id"
-  echo " - machineId:     $machine_id"
-  echo " - telemetryId:   $telemetry_id"
-  echo " - installId:     $install_id"
-  echo " - userId:        $user_id"
-  echo " - macMachineId:  $mac_machine_id"
-  echo " - devDeviceId:   $dev_device_id"
-  echo " - sqmId:         $sqm_id"
-  echo
+  echo "[OK] storage.json updated with new identifiers:"
+  for key in "${!ids[@]}"; do
+    printf " - %-14s %s\n" "$key:" "${ids[$key]}"
+  done
 }
 
-# === Entry point ===
-if ! command -v jq &>/dev/null; then
-  echo "[ERROR] 'jq' is required but not installed. Install it with: sudo pacman -S jq"
-  exit 1
-fi
+clean_all_traces() {
+  for dir in "${EXTRA_DIRS[@]}"; do
+    if [[ -d "$dir" ]]; then
+      rm -rf "$dir"
+      echo "[OK] Removed: $dir"
+    fi
+  done
+}
 
-backup
-remove_updater
-reset_ids
+restart_cursor() {
+  if pgrep -x "cursor" > /dev/null; then
+    echo "[INFO] Cursor is running. Restarting..."
+    pkill cursor
+    sleep 1
+    nohup cursor > /dev/null 2>&1 &
+    echo "[OK] Cursor restarted."
+  fi
+}
 
-# Optional: restart Cursor if running
-if pgrep -x "cursor" > /dev/null; then
-  echo "[INFO] Cursor is running. Restarting..."
-  pkill cursor
-  sleep 1
-  nohup cursor > /dev/null 2>&1 &
-  echo "[OK] Cursor restarted."
-fi
+destroy_cursor_cookies() {
+  echo "[INFO] Searching for Cursor-related cookies..."
+  grep -irl 'cursor' ~/.config/* 2>/dev/null | while read -r match; do
+    echo " - Removing: $match"
+    rm -f "$match"
+  done
+  echo "[OK] Cursor-related cookies removed (if any)."
+}
 
-echo "[DONE] Your system now appears brand new to Cursor."
+# === MENU ===
+show_menu() {
+  echo ""
+  echo "Select an option:"
+  echo "  1) Automate (Clear & New Identity)"
+  echo "  2) Destroy Cursor-cookies"
+  echo "  3) New Identity only"
+  echo "  4) Quit"
+  echo ""
+  read -rp "Enter your choice [1-4]: " choice
+
+  case "$choice" in
+    1)
+      echo "[+] Running full automation..."
+      destroy_cursor_cookies
+      backup_storage && rewrite_storage && clean_all_traces && restart_cursor
+      ;;
+    2)
+      destroy_cursor_cookies
+      ;;
+    3)
+      backup_storage && rewrite_storage && clean_all_traces && restart_cursor
+      ;;
+    4)
+      echo "Goodbye!"
+      exit 0
+      ;;
+    *)
+      echo "[ERROR] Invalid option. Try again."
+      ;;
+  esac
+}
+
+# === MAIN ===
+require_jq
+
+while true; do
+  show_menu
+done
