@@ -9,8 +9,10 @@
 ```
 
 
-## Too many free trial accounts used on this machine. Please upgrade to pro. We have this limit in place to prevent abuse.
+Too many free trial accounts used on this machine. Please upgrade to pro. We have this limit in place to prevent abuse.
 Woops...
+
+Tested and working on latest 1.1.1 version of Cursor .Appimage
 
 
 Cursor ID-Changer is a privacy-focused tool for Linux that resets identifiers and cleans up residual data from the AI code editor Cursor, making your machine appear as a fresh install.
