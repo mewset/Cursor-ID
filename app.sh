@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Cursor ID-changer - by m0s
-# https://github.com/yourname/cursor-id-changer
+# Cursor ID-changer - by mewset
+# https://github.com/mewset/Cursor-ID/
 
 # ASCII Logo
 echo "
