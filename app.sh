@@ -79,6 +79,12 @@ destroy_cursor_cookies() {
     fi
   done
 
+  # ➕ Rensa eventuell systeminstallation
+  if [[ -d "/opt/Cursor" ]]; then
+    echo "[INFO] Removing system installation: /opt/Cursor"
+    sudo rm -rf /opt/Cursor
+  fi
+
   echo "[OK] Cookie cleanup done."
 }
 
