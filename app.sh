@@ -92,8 +92,8 @@ menu() {
   while true; do
     echo ""
     echo "==== Cursor ID-Changer Menu ===="
-    echo "1. Automate (Reset ID + Clean Cookies)"
-    echo "2. Destroy Cursor Cookies"
+    echo "1. Automate (Reset ID + Clean Cookies + delete cursor appimage)"
+    echo "2. Destroy Cursor Cookies + delete cursor appimage"
     echo "3. New Identity (Only change ID)"
     echo "4. Quit"
     echo "================================"
